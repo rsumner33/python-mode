@@ -34,6 +34,12 @@ https://github.com/python-mode/python-mode#how-to-install
 | Docs: https://github.com/python-mode/python-mode/blob/develop/doc/pymode.txt
 |
 
+|
+| Src:  https://github.com/klen/python-mode
+| Homepage: https://klen.github.io/python-mode/
+| Docs: https://github.com/klen/python-mode/blob/develop/doc/pymode.txt
+|
+
 Python-mode is a vim plugin that helps you to create python code very quickly
 by utilizing libraries including
 `pylint`_, `rope`_, pydoc_, `pyflakes`_, `pep8`_, `autopep8`_,
