@@ -6,7 +6,7 @@ import warnings
 from contextlib import contextmanager
 
 import vim # noqa
-from ._compat import StringIO, PY2
+from ._compat import StringIO
 
 
 DEBUG = int(vim.eval('g:pymode_debug'))

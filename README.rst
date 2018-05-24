@@ -168,7 +168,10 @@ at https://github.com/klen/python-mode/issues
 Contributing
 ============
 
-See the `AUTHORS` file.
+* Kirill Klenov (horneds@gmail.com)
+* Bryce Guinta (https://github.com/brycepg)
+
+Also see the `AUTHORS` file.
 
 Development of python-mode happens at github:
 https://github.com/klen/python-mode
