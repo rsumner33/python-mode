@@ -1,4 +1,4 @@
-"""Pylama integration."""
+""" Pylama integration. """
 
 from .environment import env
 from .utils import silence_stderr
@@ -6,25 +6,16 @@ from .utils import silence_stderr
 import os.path
 
 
-from pylama.lint.extensions import LINTERS
-
-try:
-    from pylama.lint.pylama_pylint import Linter
-    LINTERS['pylint'] = Linter()
-except Exception:  # noqa
-    pass
-
-
 def code_check():
-    """Run pylama and check current file.
+    """ Run pylama and check current file.
 
     :return bool:
 
     """
     with silence_stderr():
 
-        from pylama.core import run
         from pylama.main import parse_options
+        from pylama.tasks import check_path
 
         if not env.curbuf.name:
             return env.stop()
@@ -43,14 +34,13 @@ def code_check():
             if opts:
                 options.linters_params[linter] = options.linters_params.get(linter, {})
                 options.linters_params[linter].update(opts)
-        options.linters_params['pylint']['clear_cache'] = True
 
         env.debug(options)
 
         path = os.path.relpath(env.curbuf.name, env.curdir)
         env.debug("Start code check: ", path)
 
-        if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip):  # noqa
+        if getattr(options, 'skip', None) and any(p.match(path) for p in options.skip): # noqa
             env.message('Skip code checking.')
             env.debug("Skipped")
             return env.stop()
@@ -59,7 +49,8 @@ def code_check():
             from pylama.core import LOGGER, logging
             LOGGER.setLevel(logging.DEBUG)
 
-        errors = run(path, code='\n'.join(env.curbuf) + '\n', options=options)
+        errors = check_path(
+            path, options=options, code='\n'.join(env.curbuf) + '\n')
 
     env.debug("Find errors: ", len(errors))
     sort_rules = env.var('g:pymode_lint_sort')
@@ -76,8 +67,6 @@ def code_check():
 
     for e in errors:
         e._info['bufnr'] = env.curbuf.number
-        if e._info['col'] is None:
-            e._info['col'] = 1
 
     env.run('g:PymodeLocList.current().extend', [e._info for e in errors])
 

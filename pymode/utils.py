@@ -6,7 +6,7 @@ import warnings
 from contextlib import contextmanager
 
 import vim # noqa
-from ._compat import StringIO
+from ._compat import StringIO, PY2
 
 
 DEBUG = int(vim.eval('g:pymode_debug'))
@@ -32,8 +32,10 @@ def silence_stderr():
 
 
 def patch_paths():
-    """Patch python sys.path.
-
-    Load required modules from the plugin's sources.
-    """
+    """ Function description. """
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs'))
+
+    if PY2:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs2'))
+    else:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'libs3'))

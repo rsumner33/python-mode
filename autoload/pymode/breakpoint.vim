@@ -17,7 +17,7 @@ fun! pymode#breakpoint#init() "{{{
 
 from imp import find_module
 
-for module in ('wdb', 'pudb', 'ipdb'):
+for module in ('pudb', 'ipdb'):
     try:
         find_module(module)
         vim.command('let g:pymode_breakpoint_cmd = "import %s; %s.set_trace()  # XXX BREAKPOINT"' % (module, module))
@@ -35,13 +35,7 @@ fun! pymode#breakpoint#operate(lnum) "{{{
         normal dd
     else
         let plnum = prevnonblank(a:lnum)
-        if &expandtab
-            let indents = repeat(' ', indent(plnum))
-        else
-            let indents = repeat("\t", plnum / &shiftwidth)
-        endif
-
-        call append(line('.')-1, indents.g:pymode_breakpoint_cmd)
+        call append(line('.')-1, repeat(' ', indent(plnum)).g:pymode_breakpoint_cmd)
         normal k
     endif
 

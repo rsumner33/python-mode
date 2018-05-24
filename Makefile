@@ -8,31 +8,6 @@ clean:
 	rm -rf $(CURDIR)/build
 	rm -rf *.deb
 
-VERSION?=minor
-# target: release - Bump version
-release:
-	git fetch origin
-	git checkout master
-	git rebase
-	git merge develop
-	bumpversion $(VERSION)
-	git checkout develop
-	git rebase
-	git merge master
-	git push origin develop master
-	git push --tags
-
-.PHONY: minor
-minor: release
-
-.PHONY: patch
-patch:
-	make release VERSION=patch
-
-.PHONY: major
-major:
-	make release VERSION=major
-
 # Temporary disable rope tests on Travis
 .PHONY: travis
 travis:
@@ -50,17 +25,6 @@ pylama:
 	rm -rf $(PYLAMA)
 	make $(PYLAMA)
 	make $(PYLAMA)/lint/pylama_pylint
-	@pip install --upgrade --force-reinstall --target=$(LIBS) pydocstyle
-	@pip install --upgrade --force-reinstall --target=$(LIBS) pycodestyle
-	@pip install --upgrade --force-reinstall --target=$(LIBS) pyflakes
-	@pip install --upgrade --force-reinstall --target=$(LIBS) mccabe
-	@find $(LIBS)/*.dist-info | xargs rm -rf
-
-.PHONY: rope
-rope:
-	@git clone https://github.com/python-rope/rope.git $(CURDIR)/_/rope
-	@rm -rf $(CURDIR)/pymode/libs/rope
-	@cp -r $(CURDIR)/_/rope/rope $(CURDIR)/pymode/libs/.
 
 .PHONY: rope
 rope:
@@ -69,10 +33,10 @@ rope:
 	@cp -r $(CURDIR)/_/rope/rope $(CURDIR)/pymode/libs/.
 
 $(PYLAMA):
-	cp -r $$PRJDIR/pylama/pylama $(PYLAMA)
+	cp -r ~/Dropbox/projects/pylama/pylama $(PYLAMA)
 
 $(PYLAMA)/lint/pylama_pylint:
-	cp -r $$PRJDIR/pylama/plugins/pylama_pylint/pylama_pylint/ $(PYLAMA)/lint/pylama_pylint
+	cp -r ~/Dropbox/projects/pylama/plugins/pylama_pylint/pylama_pylint/ $(PYLAMA)/lint/pylama_pylint
 
 $(CURDIR)/build:
 	mkdir -p $(CURDIR)/build/usr/share/vim/addons

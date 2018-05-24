@@ -68,7 +68,7 @@ fun! g:PymodeLocList.show() "{{{
     call setloclist(0, self._loclist)
     if self.is_empty()
         lclose
-    elseif g:pymode_lint_cwindow
+    else
         let num = winnr()
         lopen
         setl nowrap
