@@ -16,6 +16,7 @@ Changelog
 * Rope: correct refactoring function calls
 
 
+
 ## 2014-06-11 0.8.1
 -------------------
 * Pylama updated to version 3.3.2

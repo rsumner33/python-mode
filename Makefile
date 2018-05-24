@@ -62,6 +62,12 @@ rope:
 	@rm -rf $(CURDIR)/pymode/libs/rope
 	@cp -r $(CURDIR)/_/rope/rope $(CURDIR)/pymode/libs/.
 
+.PHONY: rope
+rope:
+	@git clone https://github.com/python-rope/rope.git $(CURDIR)/_/rope
+	@rm -rf $(CURDIR)/pymode/libs/rope
+	@cp -r $(CURDIR)/_/rope/rope $(CURDIR)/pymode/libs/.
+
 $(PYLAMA):
 	cp -r $$PRJDIR/pylama/pylama $(PYLAMA)
 
