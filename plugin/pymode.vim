@@ -39,7 +39,7 @@ call pymode#default("g:pymode_folding", 1)
 " Maximum file length to check for nested class/def statements
 call pymode#default("g:pymode_folding_nest_limit", 1000)
 " Change for folding customization (by example enable fold for 'if', 'for')
-call pymode#default("g:pymode_folding_regex", '^\s*\%(class\|def\) \w\+')
+call pymode#default("g:pymode_folding_regex", '^\s*\%(class\|def\|async\s\+def\) \w\+')
 
 " Enable/disable python motion operators
 call pymode#default("g:pymode_motion", 1)
@@ -314,4 +314,3 @@ endif
 command! PymodeVersion echomsg "Pymode version: " . g:pymode_version . " interpreter: " . g:pymode_python . " lint: " . g:pymode_lint . " rope: " . g:pymode_rope
 
 augroup pymode
-
