@@ -185,3 +185,7 @@ class VCGWriter(DiagramWriter):
         """close graph and file"""
         self.printer.close_graph()
         self.graph_file.close()
+<<>>>>>>>+HEAD
+=====
+
+>>>>>>> af42681... Update pylama

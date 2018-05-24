@@ -40,6 +40,7 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
 
     try:
         with CodeContext(code, path) as ctx:
+            path = op.relpath(path, rootdir)
             code = ctx.code
             params = prepare_params(parse_modeline(code), fileconfig, options)
             LOGGER.debug('Checking params: %s', params)

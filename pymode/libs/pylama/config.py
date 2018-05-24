@@ -147,6 +147,10 @@ PARSER.add_argument(
     "--abspath", "-a", action='store_true', default=_Default(False),
     help="Use absolute paths in output.")
 
+PARSER.add_argument(
+    "--abspath", "-a", action='store_true', default=_Default(False),
+    help="Use absolute paths in output.")
+
 
 ACTIONS = dict((a.dest, a) for a in PARSER._actions)  # pylint: disable=protected-access
 
