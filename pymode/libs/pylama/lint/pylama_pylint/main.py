@@ -1,14 +1,15 @@
-"""Pylint integration to Pylama."""
-import logging
+""" Pylint support. """
 from os import path as op, environ
+import logging
+
+from pylama.lint import Linter as BaseLinter
+
+CURDIR = op.abspath(op.dirname(__file__))
 
 from astroid import MANAGER
-from pylama.lint import Linter as BaseLinter
 from pylint.lint import Run
 from pylint.reporters import BaseReporter
 
-
-CURDIR = op.abspath(op.dirname(__file__))
 HOME_RCFILE = op.abspath(op.join(environ.get('HOME', ''), '.pylintrc'))
 LAMA_RCFILE = op.abspath(op.join(CURDIR, 'pylint.rc'))
 
@@ -18,19 +19,18 @@ logger = logging.getLogger('pylama')
 
 class Linter(BaseLinter):
 
-    """Check code with Pylint."""
+    """ Check code with pylint. """
 
     @staticmethod
     def run(path, code, params=None, ignore=None, select=None, **meta):
-        """Pylint code checking.
+        """ Pylint code checking.
 
         :return list: List of errors.
+
         """
         logger.debug('Start pylint')
 
-        clear_cache = params.pop('clear_cache', False)
-        if clear_cache:
-            MANAGER.astroid_cache.clear()
+        MANAGER.astroid_cache.clear()
 
         class Reporter(BaseReporter):
 
@@ -41,27 +41,27 @@ class Linter(BaseLinter):
             def _display(self, layout):
                 pass
 
-            def handle_message(self, msg):
+            def add_message(self, msg_id, location, msg):
+                _, _, line, col = location[1:]
                 self.errors.append(dict(
-                    lnum=msg.line,
-                    col=msg.column,
-                    text="%s %s" % (msg.msg_id, msg.msg),
-                    type=msg.msg_id[0]
+                    lnum=line,
+                    col=col,
+                    text="%s %s" % (msg_id, msg),
+                    type=msg_id[0]
                 ))
 
         params = _Params(ignore=ignore, select=select, params=params)
         logger.debug(params)
 
-        reporter = Reporter()
+        runner = Run(
+            [path] + params.to_attrs(), reporter=Reporter(), exit=False)
 
-        Run([path] + params.to_attrs(), reporter=reporter, exit=False)
-
-        return reporter.errors
+        return runner.linter.reporter.errors
 
 
 class _Params(object):
 
-    """Store pylint params."""
+    """ Store pylint params. """
 
     def __init__(self, select=None, ignore=None, params=None):
 
@@ -80,7 +80,8 @@ class _Params(object):
             disable = ignore | set(disable.split(",") if disable else [])
 
         params.update(dict(
-            rcfile=rcfile, enable=enable, disable=disable))
+            report=params.get('report', False), rcfile=rcfile,
+            enable=enable, disable=disable))
 
         self.params = dict(
             (name.replace('_', '-'), self.prepare_value(value))
@@ -88,7 +89,7 @@ class _Params(object):
 
     @staticmethod
     def prepare_value(value):
-        """Prepare value to pylint."""
+        """ Prepare value to pylint. """
         if isinstance(value, (list, tuple, set)):
             return ",".join(value)
 
@@ -98,7 +99,7 @@ class _Params(object):
         return str(value)
 
     def to_attrs(self):
-        """Convert to argument list."""
+        """ Convert to argument list. """
         return ["--%s=%s" % item for item in self.params.items()]
 
     def __str__(self):

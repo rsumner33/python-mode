@@ -43,7 +43,6 @@ def code_check():
             if opts:
                 options.linters_params[linter] = options.linters_params.get(linter, {})
                 options.linters_params[linter].update(opts)
-        options.linters_params['pylint']['clear_cache'] = True
 
         env.debug(options)
 

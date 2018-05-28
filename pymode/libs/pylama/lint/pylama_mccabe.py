@@ -15,7 +15,10 @@ class Linter(Abstract):
 
         :return list: List of errors.
         """
-        tree = compile(code, path, "exec", ast.PyCF_ONLY_AST)
+        try:
+            tree = compile(code, path, "exec", ast.PyCF_ONLY_AST)
+        except SyntaxError as exc:
+            return [{'lnum': exc.lineno, 'text': 'Invalid syntax: %s' % exc.text.strip()}]
 
         McCabeChecker.max_complexity = int(params.get('complexity', 10))
         return [

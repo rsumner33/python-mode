@@ -1,7 +1,10 @@
-"""Support for checking code asynchronously."""
+""" Support for asyncronious checking. """
 
 import logging
 import threading
+
+from .core import run
+
 
 try:
     import Queue
@@ -17,14 +20,12 @@ try:
 except (ImportError, NotImplementedError):
     CPU_COUNT = 1
 
-from .core import run
-
-
 LOGGER = logging.getLogger('pylama')
 
 
 class Worker(threading.Thread):
-    """Get tasks from queue and run."""
+
+    """ Get tasks from queue and run. """
 
     def __init__(self, path_queue, result_queue):
         """ Init worker. """
@@ -42,7 +43,7 @@ class Worker(threading.Thread):
 
 
 def check_async(paths, options, rootdir=None):
-    """Check given paths asynchronously.
+    """ Check given paths asynchronously.
 
     :return list: list of errors
 

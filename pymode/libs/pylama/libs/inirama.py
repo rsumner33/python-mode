@@ -177,7 +177,7 @@ class INIScanner(Scanner):
     ignore = ['IGNORE']
 
     def pre_scan(self):
-        """ Prepare string for scanning. """
+        """ Prepare string for scaning. """
         escape_re = re.compile(r'\\\n[\t ]+')
         self.source = escape_re.sub('', self.source)
 
@@ -274,7 +274,7 @@ class Namespace(object):
     #: Name of default section (:attr:`~inirama.Namespace.default`)
     default_section = 'DEFAULT'
 
-    #: Dont raise any exception on file reading errors
+    #: Dont raise any exception on file reading erorrs
     silent_read = True
 
     #: Class for generating sections
@@ -337,7 +337,7 @@ class Namespace(object):
         """ Parse INI source as string.
 
         :param source: Source of INI
-        :param update: Replace already defined items
+        :param update: Replace alredy defined items
 
         """
         scanner = INIScanner(source)

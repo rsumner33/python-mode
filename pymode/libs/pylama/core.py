@@ -1,9 +1,9 @@
-"""Pylama's core functionality.
+""" Pylama's core functionality.
 
 Prepare params, check a modeline and run the checkers.
+
 """
 import logging
-import sys
 
 import os.path as op
 from .config import process_value, LOGGER, MODELINE_RE, SKIP_PATTERN, CURDIR
@@ -12,7 +12,7 @@ from .lint.extensions import LINTERS
 
 
 def run(path='', code=None, rootdir=CURDIR, options=None):
-    """Run code checkers with given params.
+    """ Run code checkers with given params.
 
     :param path: (str) A file's path.
     :param code: (str) A code source
@@ -40,7 +40,6 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
 
     try:
         with CodeContext(code, path) as ctx:
-            path = op.relpath(path, rootdir)
             code = ctx.code
             params = prepare_params(parse_modeline(code), fileconfig, options)
             LOGGER.debug('Checking params: %s', params)
@@ -61,12 +60,10 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
                 lparams = linters_params.get(lname, dict())
                 LOGGER.info("Run %s %s", lname, lparams)
 
-                linter_errors = linter.run(
-                    path, code=code, ignore=params.get("ignore", set()),
-                    select=params.get("select", set()), params=lparams)
-                if linter_errors:
-                    for er in linter_errors:
-                        errors.append(Error(filename=path, linter=lname, **er))
+                for er in linter.run(
+                        path, code=code, ignore=params.get("ignore", set()),
+                        select=params.get("select", set()), params=lparams):
+                    errors.append(Error(filename=path, linter=lname, **er))
 
     except IOError as e:
         LOGGER.debug("IOError %s", e)
@@ -75,15 +72,14 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
     except SyntaxError as e:
         LOGGER.debug("SyntaxError %s", e)
         errors.append(
-            Error(linter='pylama', lnum=e.lineno, col=e.offset,
-                  text='E0100 SyntaxError: {}'.format(e.args[0]),
+            Error(linter=lname, lnum=e.lineno, col=e.offset, text=e.args[0],
                   filename=path))
 
     except Exception as e: # noqa
         import traceback
         LOGGER.info(traceback.format_exc())
 
-    errors = filter_errors(errors, **params)  # noqa
+    errors = filter_errors(errors, **params)
 
     errors = list(remove_duplicates(errors))
 
@@ -98,7 +94,7 @@ def run(path='', code=None, rootdir=CURDIR, options=None):
 
 
 def parse_modeline(code):
-    """Parse params from file's modeline.
+    """ Parse params from file's modeline.
 
     :return dict: Linter params.
 
@@ -111,7 +107,7 @@ def parse_modeline(code):
 
 
 def prepare_params(modeline, fileconfig, options):
-    """Prepare and merge a params from modelines and configs.
+    """ Prepare and merge a params from modelines and configs.
 
     :return dict:
 
@@ -133,7 +129,7 @@ def prepare_params(modeline, fileconfig, options):
 
 
 def filter_errors(errors, select=None, ignore=None, **params):
-    """Filter errors by select and ignore options.
+    """ Filter a erros by select and ignore options.
 
     :return bool:
 
@@ -155,7 +151,7 @@ def filter_errors(errors, select=None, ignore=None, **params):
 
 
 def filter_skiplines(code, errors):
-    """Filter lines by `noqa`.
+    """ Filter lines by `noqa`.
 
     :return list: A filtered errors
 
@@ -176,7 +172,8 @@ def filter_skiplines(code, errors):
 
 
 class CodeContext(object):
-    """Read file if code is None. """
+
+    """ Read file if code is None. """
 
     def __init__(self, code, path):
         """ Init context. """
@@ -188,12 +185,7 @@ class CodeContext(object):
         """ Open a file and read it. """
         if self.code is None:
             LOGGER.info("File is reading: %s", self.path)
-            if sys.version_info >= (3, ):
-                # 'U' mode is deprecated in python 3
-                mode = 'r'
-            else:
-                mode = 'rU'
-            self._file = open(self.path, mode)
+            self._file = open(self.path, 'rU')
             self.code = self._file.read()
         return self
 

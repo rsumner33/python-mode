@@ -7,8 +7,6 @@ from __future__ import with_statement
 
 import optparse
 import sys
-import tokenize
-
 from collections import defaultdict
 try:
     import ast
@@ -16,7 +14,7 @@ try:
 except ImportError:   # Python 2.5
     from flake8.util import ast, iter_child_nodes
 
-__version__ = '0.6.1'
+__version__ = '0.3.1'
 
 
 class ASTVisitor(object):
@@ -61,11 +59,10 @@ class PathNode(object):
 
 
 class PathGraph(object):
-    def __init__(self, name, entity, lineno, column=0):
+    def __init__(self, name, entity, lineno):
         self.name = name
         self.entity = entity
         self.lineno = lineno
-        self.column = column
         self.nodes = defaultdict(list)
 
     def connect(self, n1, n2):
@@ -117,7 +114,7 @@ class PathGraphingAstVisitor(ASTVisitor):
         else:
             entity = node.name
 
-        name = '%d:%d: %r' % (node.lineno, node.col_offset, entity)
+        name = '%d:1: %r' % (node.lineno, entity)
 
         if self.graph is not None:
             # closure
@@ -129,14 +126,12 @@ class PathGraphingAstVisitor(ASTVisitor):
             self.graph.connect(pathnode, bottom)
             self.tail = bottom
         else:
-            self.graph = PathGraph(name, entity, node.lineno, node.col_offset)
+            self.graph = PathGraph(name, entity, node.lineno)
             pathnode = PathNode(name)
             self.tail = pathnode
             self.dispatch_list(node.body)
             self.graphs["%s%s" % (self.classname, node.name)] = self.graph
             self.reset()
-
-    visitAsyncFunctionDef = visitFunctionDef
 
     def visitClassDef(self, node):
         old_classname = self.classname
@@ -160,17 +155,16 @@ class PathGraphingAstVisitor(ASTVisitor):
         name = "Stmt %d" % lineno
         self.appendPathNode(name)
 
-    def default(self, node, *args):
-        if isinstance(node, ast.stmt):
-            self.visitSimpleStatement(node)
-        else:
-            super(PathGraphingAstVisitor, self).default(node, *args)
+    visitAssert = visitAssign = visitAugAssign = visitDelete = visitPrint = \
+        visitRaise = visitYield = visitImport = visitCall = visitSubscript = \
+        visitPass = visitContinue = visitBreak = visitGlobal = visitReturn = \
+        visitSimpleStatement
 
     def visitLoop(self, node):
         name = "Loop %d" % node.lineno
         self._subgraph(node, name)
 
-    visitAsyncFor = visitFor = visitWhile = visitLoop
+    visitFor = visitWhile = visitLoop
 
     def visitIf(self, node):
         name = "If %d" % node.lineno
@@ -180,7 +174,7 @@ class PathGraphingAstVisitor(ASTVisitor):
         """create the subgraphs representing any `if` and `for` statements"""
         if self.graph is None:
             # global loop
-            self.graph = PathGraph(name, name, node.lineno, node.col_offset)
+            self.graph = PathGraph(name, name, node.lineno)
             pathnode = PathNode(name)
             self._subgraph_parse(node, pathnode, extra_blocks)
             self.graphs["%s%s" % (self.classname, name)] = self.graph
@@ -222,8 +216,6 @@ class PathGraphingAstVisitor(ASTVisitor):
         self.appendPathNode(name)
         self.dispatch_list(node.body)
 
-    visitAsyncWith = visitWith
-
 
 class McCabeChecker(object):
     """McCabe cyclomatic complexity checker."""
@@ -231,29 +223,16 @@ class McCabeChecker(object):
     version = __version__
     _code = 'C901'
     _error_tmpl = "C901 %r is too complex (%d)"
-    max_complexity = -1
+    max_complexity = 0
 
     def __init__(self, tree, filename):
         self.tree = tree
 
     @classmethod
     def add_options(cls, parser):
-        flag = '--max-complexity'
-        kwargs = {
-            'default': -1,
-            'action': 'store',
-            'type': 'int',
-            'help': 'McCabe complexity threshold',
-            'parse_from_config': 'True',
-        }
-        config_opts = getattr(parser, 'config_options', None)
-        if isinstance(config_opts, list):
-            # Flake8 2.x
-            kwargs.pop('parse_from_config')
-            parser.add_option(flag, **kwargs)
-            parser.config_options.append('max-complexity')
-        else:
-            parser.add_option(flag, **kwargs)
+        parser.add_option('--max-complexity', default=-1, action='store',
+                          type='int', help="McCabe complexity threshold")
+        parser.config_options.append('max-complexity')
 
     @classmethod
     def parse_options(cls, options):
@@ -267,7 +246,7 @@ class McCabeChecker(object):
         for graph in visitor.graphs.values():
             if graph.complexity() > self.max_complexity:
                 text = self._error_tmpl % (graph.entity, graph.complexity())
-                yield graph.lineno, graph.column, text, type(self)
+                yield graph.lineno, 0, text, type(self)
 
 
 def get_code_complexity(code, threshold=7, filename='stdin'):
@@ -296,23 +275,6 @@ def get_module_complexity(module_path, threshold=7):
     return get_code_complexity(code, threshold, filename=module_path)
 
 
-def _read(filename):
-    if (2, 5) < sys.version_info < (3, 0):
-        with open(filename, 'rU') as f:
-            return f.read()
-    elif (3, 0) <= sys.version_info < (4, 0):
-        """Read the source code."""
-        try:
-            with open(filename, 'rb') as f:
-                (encoding, _) = tokenize.detect_encoding(f.readline)
-        except (LookupError, SyntaxError, UnicodeError):
-            # Fall back if file encoding is improperly declared
-            with open(filename, encoding='latin-1') as f:
-                return f.read()
-        with open(filename, 'r', encoding=encoding) as f:
-            return f.read()
-
-
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -325,7 +287,8 @@ def main(argv=None):
 
     options, args = opar.parse_args(argv)
 
-    code = _read(args[0])
+    with open(args[0], "rU") as mod:
+        code = mod.read()
     tree = compile(code, args[0], "exec", ast.PyCF_ONLY_AST)
     visitor = PathGraphingAstVisitor()
     visitor.preorder(tree, visitor)
@@ -345,3 +308,4 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
+
